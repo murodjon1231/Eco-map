@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Eco-Signal{% endblock %}
+{% block content %}
+<section class="page">
+  <div class="wrap two-col">
+    <div>
+      <h1>Eco-Signal</h1>
+      <p class="lead">Daraxt quriyotgan, shoxi singan yoki noqonuniy kesilish xavfi bo‘lsa — tezkor xabar yuboring. Eko-patrul GPS manzil bilan qabul qiladi.</p>
+      <div class="panel">
+        <div class="panel-h"><span>🔔 Yangi murojaat</span></div>
+        <form class="form" style="padding:16px" method="post" action="{{ url_for('eco_signal_send') }}" enctype="multipart/form-data">
+          <label>Sarlavha</label>
+          <input name="title" required placeholder="Masalan: Chinor sug‘orishni talab qiladi">
+          <label>Tavsif</label>
+          <textarea name="description" rows="4" required placeholder="Nima bo‘lganini, qayerdaligini yozing"></textarea>
+          <div class="grid-2">
+            <div>
+              <label>Ismingiz</label>
+              <input name="reporter" placeholder="F.I.Sh">
+            </div>
+            <div>
+              <label>Bog‘liq daraxt (ixtiyoriy)</label>
+              <select name="tree_id">
+                <option value="">Tanlanmagan</option>
+                {% for t in trees %}
+                <option value="{{ t.id }}" {{ 'selected' if selected_tree == t.id else '' }}>{{ t.public_code }} — {{ t.species_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label>Kenglik</label>
+              <input id="sigLat" name="latitude" value="{{ school.lat }}">
+            </div>
+            <div>
+              <label>Uzunlik</label>
+              <input id="sigLng" name="longitude" value="{{ school.lng }}">
+            </div>
+          </div>
+          <label>Rasm (ixtiyoriy)</label>
+          <input type="file" name="photo" accept="image/*">
+          <div class="hero-actions">
+            <button class="btn btn-green" type="submit">Xabar yuborish</button>
+            <button class="btn btn-outline" type="button" id="sigGeo">📍 Mening joyim</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-h"><span>So‘nggi xabarlar</span><a href="{{ url_for('xarita') }}">Xarita</a></div>
+        <div class="signals">
+          {% for r in reports %}
+          <div class="signal" id="r{{ r.id }}">
+            <div class="avatar">🌳</div>
+            <div>
+              <h4>{{ r.title }}</h4>
+              <p style="color:#5b6e62;font-size:13px;margin-top:4px">{{ r.description }}</p>
+              <span class="chip {{ 'yangi' if r.status == 'Yangi' else ('jarayonda' if r.status == 'Jarayonda' else 'korib') }}">{{ r.status }}</span>
+              <div style="color:#7b8d81;font-size:12px;margin-top:6px">{{ r.reporter }} · {{ r.created_at }}</div>
+              {% if r.photo_url %}
+              <a class="link" href="{{ url_for('static', filename=r.photo_url) }}" target="_blank">Rasmni ko‘rish</a>
+              {% endif %}
+              {% if r.tree_id %}
+              <a class="link" href="{{ url_for('daraxt_pasport', tree_id=r.tree_id) }}">Daraxt pasporti</a>
+              {% endif %}
+              <a class="link" href="{{ url_for('xarita') }}">Xaritada</a>
+              {% if current_user %}
+              <form method="post" action="{{ url_for('report_status', report_id=r.id) }}" style="margin-top:8px;display:flex;gap:6px">
+                <select name="status">
+                  <option {{ 'selected' if r.status=='Yangi' }}>Yangi</option>
+                  <option {{ 'selected' if r.status=='Jarayonda' }}>Jarayonda</option>
+                  <option {{ 'selected' if r.status=='Ko‘rib chiqildi' }}>Ko‘rib chiqildi</option>
+                </select>
+                <button class="btn btn-outline" type="submit" style="padding:8px 12px">Yangilash</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  const geoBtn = document.getElementById("sigGeo");
+  if (geoBtn) {
+    geoBtn.onclick = () => {
+      if (!navigator.geolocation) return alert("Geolokatsiya mavjud emas.");
+      navigator.geolocation.getCurrentPosition(pos => {
+        document.getElementById("sigLat").value = pos.coords.latitude.toFixed(6);
+        document.getElementById("sigLng").value = pos.coords.longitude.toFixed(6);
+      }, () => alert("Joylashuv ruxsat etilmadi."));
+    };
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Kirish{% endblock %}
+{% block content %}
+<section class="page">
+  <div class="login-card">
+    <h1>Tizimga kirish</h1>
+    <p class="lead">Administrator va eko-patrul uchun boshqaruv paneli.</p>
+    <form class="form" method="post">
+      <input type="hidden" name="next" value="{{ next or request.args.get('next','') }}">
+      <label>Login</label>
+      <input name="username" required placeholder="admin">
+      <label>Parol</label>
+      <input name="password" type="password" required>
+      <button class="btn btn-green" type="submit">Kirish</button>
+    </form>
+    <div class="hint">
+      Demo akkauntlar:<br>
+      <b>admin</b> / ecomap2026<br>
+      <b>oquvchi</b> / 237maktab
+    </div>
+  </div>
+</section>
+{% endblock %}

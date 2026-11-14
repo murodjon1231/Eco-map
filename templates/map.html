@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Xarita{% endblock %}
+{% block content %}
+<section class="page">
+  <div class="wrap">
+    <h1>Hudud ekologik xaritasi</h1>
+    <p class="lead">237-maktab va tutash mahalla daraxtlarini holati bo‘yicha filtrlash, marker ustiga bosib raqamli pasportni ochish mumkin.</p>
+    <form class="filters" method="get">
+      <select name="holat" onchange="this.form.submit()">
+        <option value="">Barcha holat</option>
+        <option value="Sog‘lom" {{ 'selected' if selected_status == 'Sog‘lom' else '' }}>Sog‘lom</option>
+        <option value="Parvarish talab" {{ 'selected' if selected_status == 'Parvarish talab' else '' }}>Parvarish talab</option>
+        <option value="Xavfli" {{ 'selected' if selected_status == 'Xavfli' else '' }}>Xavfli</option>
+        <option value="muammo" {{ 'selected' if selected_status == 'muammo' else '' }}>Parvarish / xavfli</option>
+      </select>
+      <select name="tur" onchange="this.form.submit()">
+        <option value="">Barcha turlar</option>
+        {% for t in types %}
+          <option value="{{ t }}" {{ 'selected' if selected_species == t else '' }}>{{ t }}</option>
+        {% endfor %}
+      </select>
+      {% if focus_id %}<input type="hidden" name="daraxt" value="{{ focus_id }}">{% endif %}
+      <a class="btn btn-outline" href="{{ url_for('xarita') }}">Filtrni tozalash</a>
+      <button class="btn btn-outline" type="button" id="locateBtn">📍 Mening joyim</button>
+      <a class="btn btn-green" href="{{ url_for('eco_signal') }}">Eco-Signal yuborish</a>
+    </form>
+    <div class="wrap stats" style="width:100%;margin:0 0 16px">
+      <div class="stat"><i>🌳</i><div><span>Xaritada</span><b>{{ trees|length }}</b></div></div>
+      <div class="stat"><i>✅</i><div><span>Sog‘lom</span><b>{{ stats.healthy }}</b></div></div>
+      <div class="stat warn"><i>⚠️</i><div><span>Parvarish / xavfli</span><b>{{ stats.care }}</b></div></div>
+      <div class="stat"><i>🍃</i><div><span>Yashil hududlar</span><b>{{ stats.zones }}</b></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-h">
+        <span>🗺️ Leaflet + OpenStreetMap</span>
+        <a href="{{ url_for('index') }}">Bosh sahifa</a>
+      </div>
+      <div class="map-box" style="height:560px">
+        <div class="legend">
+          <div><span class="dot ok"></span> Sog‘lom</div>
+          <div><span class="dot warn"></span> Parvarish talab</div>
+          <div><span class="dot danger"></span> Xavfli</div>
+        </div>
+        <div id="fullMap" style="height:560px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  const trees = {{ trees | tojson }};
+  const zones = {{ zones | tojson }};
+  const focusId = {{ focus_id or 0 }};
+  const map = L.map("fullMap").setView([{{ school.lat }}, {{ school.lng }}], 15);
+  const layers = addBaseLayers(map, false);
+  L.control.layers({ "Xarita": layers.osm, "Sun’iy yo‘ldosh": layers.esri }).addTo(map);
+  zones.forEach(z => {
+    L.circle([z.latitude, z.longitude], {
+      radius: Math.sqrt(z.area_m2) * 1.2,
+      color: "#166534",
+      fillColor: "#22c55e",
+      fillOpacity: 0.12,
+      weight: 1
+    }).addTo(map).bindPopup(`<b>${z.name}</b><br>${z.area_m2} m² · ${z.status}`);
+  });
+  let focused = null;
+  trees.forEach(t => {
+    const m = L.marker([t.latitude, t.longitude], { icon: treeIcon(t.health_status) }).addTo(map);
+    bindTreePopup(m, t);
+    if (focusId && t.id === focusId) focused = { m, t };
+  });
+  L.marker([{{ school.lat }}, {{ school.lng }}], { icon: schoolIcon() }).addTo(map);
+  if (focused) {
+    map.setView([focused.t.latitude, focused.t.longitude], 18);
+    focused.m.openPopup();
+  }
+  document.getElementById("locateBtn").onclick = () => {
+    if (!navigator.geolocation) return alert("Brauzer geolokatsiyani qo‘llab-quvvatlamaydi.");
+    navigator.geolocation.getCurrentPosition(pos => {
+      map.setView([pos.coords.latitude, pos.coords.longitude], 17);
+      L.circleMarker([pos.coords.latitude, pos.coords.longitude], { radius: 8, color: "#2563eb" }).addTo(map).bindPopup("Sizning joyingiz").openPopup();
+    }, () => alert("Joylashuvni olish ruxsat etilmadi."));
+  };
+</script>
+{% endblock %}

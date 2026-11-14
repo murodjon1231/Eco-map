@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Admin panel{% endblock %}
+{% block content %}
+<section class="page">
+  <div class="wrap">
+    <div class="catalog-head">
+      <h1>Eko-patrul paneli</h1>
+      <div class="hero-actions">
+        <a class="btn btn-green" href="{{ url_for('daraxt_qoshish') }}">＋ Daraxt qo‘shish</a>
+        <a class="btn btn-outline" href="{{ url_for('admin_export') }}">Hisobotni yuklab olish</a>
+        <a class="btn btn-outline" href="{{ url_for('chiqish') }}">Chiqish</a>
+      </div>
+    </div>
+    <p class="lead">Xush kelibsiz, {{ current_user.full_name }}. Yangi obyekt qo‘shish, holatni yangilash va Eco-Signal murojaatlarini boshqarish.</p>
+    <div class="stats" style="width:100%">
+      <div class="stat"><i>🌳</i><div><span>Jami</span><b>{{ stats.total }}</b></div></div>
+      <div class="stat"><i>✅</i><div><span>Sog‘lom</span><b>{{ stats.healthy }}</b></div></div>
+      <div class="stat warn"><i>⚠️</i><div><span>Muammoli</span><b>{{ stats.care }}</b></div></div>
+      <div class="stat"><i>🍃</i><div><span>Hududlar</span><b>{{ stats.zones }}</b></div></div>
+    </div>
+    <div class="two-col" style="margin-top:16px">
+      <div class="panel">
+        <div class="panel-h white"><span>Turlar bo‘yicha ulush</span></div>
+        <table class="table">
+          <tr><th>Tur</th><th>Soni</th><th>Ulushi</th></tr>
+          {% for s in species %}
+          <tr>
+            <td>{{ s.species_name }}</td>
+            <td>{{ s.c }}</td>
+            <td>{{ '%.1f'|format(s.c / stats.total * 100) }}%</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+      <div class="panel">
+        <div class="panel-h white"><span>So‘nggi daraxtlar</span><a href="{{ url_for('daraxtlar') }}">Katalog</a></div>
+        <table class="table">
+          {% for t in latest_trees %}
+          <tr>
+            <td><a href="{{ url_for('daraxt_pasport', tree_id=t.id) }}">{{ t.public_code }}</a></td>
+            <td>{{ t.species_name }}</td>
+            <td><span class="badge {{ status_class(t.health_status) }}">{{ t.health_status }}</span></td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:16px">
+      <div class="panel-h white"><span>Eco-Signal murojaatlari</span><a href="{{ url_for('eco_signal') }}">Barchasi</a></div>
+      <table class="table">
+        <tr><th>Sana</th><th>Sarlavha</th><th>Holat</th><th></th></tr>
+        {% for r in reports %}
+        <tr>
+          <td>{{ r.created_at }}</td>
+          <td>{{ r.title }}</td>
+          <td>{{ r.status }}</td>
+          <td>
+            <form method="post" action="{{ url_for('report_status', report_id=r.id) }}" style="display:flex;gap:6px">
+              <select name="status">
+                <option>Yangi</option>
+                <option>Jarayonda</option>
+                <option>Ko‘rib chiqildi</option>
+              </select>
+              <button class="btn btn-outline" style="padding:6px 10px" type="submit">OK</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

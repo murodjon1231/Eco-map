@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Daraxtlar{% endblock %}
+{% block content %}
+<section class="page">
+  <div class="wrap">
+    <h1>Daraxtlar katalogi</h1>
+    <p class="lead">237-maktab reyestri: tur, yosh, bo‘y va sanitariya holati. Har bir obyektning raqamli pasporti va QR-kodi bor.</p>
+    <form class="filters" method="get">
+      <input type="search" name="q" value="{{ q }}" placeholder="Qidirish: Chinor, UZ-237-...">
+      <select name="holat">
+        <option value="">Barcha holat</option>
+        <option value="Sog‘lom" {{ 'selected' if selected_status == 'Sog‘lom' else '' }}>Sog‘lom</option>
+        <option value="Parvarish talab" {{ 'selected' if selected_status == 'Parvarish talab' else '' }}>Parvarish talab</option>
+        <option value="Xavfli" {{ 'selected' if selected_status == 'Xavfli' else '' }}>Xavfli</option>
+        <option value="muammo" {{ 'selected' if selected_status == 'muammo' else '' }}>Parvarish / xavfli</option>
+      </select>
+      <select name="tur">
+        <option value="">Barcha turlar</option>
+        {% for t in types %}
+          <option value="{{ t }}" {{ 'selected' if selected_species == t else '' }}>{{ t }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-green" type="submit">Qidirish</button>
+      <a class="btn btn-outline" href="{{ url_for('daraxtlar') }}">Tozalash</a>
+      <a class="btn btn-outline" href="{{ url_for('daraxt_qoshish') }}">＋ Daraxt qo‘shish</a>
+    </form>
+    <p class="lead">Ko‘rsatilmoqda: {{ trees|length }} / {{ total }} ta obyekt{% if pages > 1 %} · {{ page }}-sahifa{% endif %}</p>
+    <div class="cards" style="margin-bottom:18px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+      {% for c in counts %}
+      <a class="stat" href="{{ url_for('daraxtlar', tur=c.species_name) }}"><i>🌿</i><div><span>{{ c.species_name }}</span><b>{{ c.c }}</b></div></a>
+      {% endfor %}
+    </div>
+    <div class="cards">
+      {% for t in trees %}
+      <article class="card">
+        <div class="photo" data-photo="{{ t.photo_key }}"></div>
+        <div class="card-body">
+          <h3>{{ t.species_name }}</h3>
+          <div class="meta">
+            <span>{{ t.public_code }}</span>
+            <span>🌿 {{ tree_age(t.planted_year) }} yil</span>
+            <span>📏 {{ t.height_m }} m</span>
+          </div>
+          <p style="margin-top:8px"><span class="badge {{ status_class(t.health_status) }}">{{ t.health_status }}</span></p>
+          <div class="hero-actions" style="margin-top:10px">
+            <a class="link" href="{{ url_for('daraxt_pasport', tree_id=t.id) }}">Pasportni ko‘rish →</a>
+            <a class="link" href="{{ url_for('xarita', daraxt=t.id) }}">Xarita</a>
+          </div>
+        </div>
+      </article>
+      {% else %}
+      <p>Hech narsa topilmadi. <a class="link" href="{{ url_for('daraxtlar') }}">Filtrni tozalash</a></p>
+      {% endfor %}
+    </div>
+    {% if pages > 1 %}
+    <div class="hero-actions" style="margin-top:18px">
+      {% if page > 1 %}
+      <a class="btn btn-outline" href="{{ url_for('daraxtlar', q=q, holat=selected_status, tur=selected_species, sahifa=page-1) }}">← Oldingi</a>
+      {% endif %}
+      <span class="lead" style="margin:0">{{ page }} / {{ pages }}</span>
+      {% if page < pages %}
+      <a class="btn btn-outline" href="{{ url_for('daraxtlar', q=q, holat=selected_status, tur=selected_species, sahifa=page+1) }}">Keyingi →</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

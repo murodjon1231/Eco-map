@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Daraxt qo‘shish{% endblock %}
+{% block content %}
+<section class="page">
+  <div class="wrap two-col">
+    <div>
+      <h1>Yangi daraxt qo‘shish</h1>
+      <p class="lead">GPS nuqtani xaritadan tanlang yoki telefon lokatsiyasini oling. Ko‘chat ekilganda joyida turib kiritiladi.</p>
+      <form class="form panel" style="padding:18px" method="post">
+        <label>Tur</label>
+        <select name="species_name">
+          {% for s in species %}
+          <option>{{ s.name }}</option>
+          {% endfor %}
+        </select>
+        <div class="grid-2">
+          <div>
+            <label>Ekilgan yil</label>
+            <input type="number" name="planted_year" value="2026" min="1951" max="2026">
+          </div>
+          <div>
+            <label>Holati</label>
+            <select name="health_status">
+              <option>Sog‘lom</option>
+              <option>Parvarish talab</option>
+              <option>Xavfli</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label>Bo‘yi (m)</label>
+            <input type="number" step="0.1" name="height_m" value="2.0">
+          </div>
+          <div>
+            <label>Diametr (sm)</label>
+            <input type="number" step="0.1" name="trunk_diameter" value="8">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label>Kenglik</label>
+            <input id="lat" name="latitude" value="{{ school.lat }}">
+          </div>
+          <div>
+            <label>Uzunlik</label>
+            <input id="lng" name="longitude" value="{{ school.lng }}">
+          </div>
+        </div>
+        <label>Izoh</label>
+        <textarea name="notes" rows="3" placeholder="Masalan: 5-sinf ekkan ko‘chat"></textarea>
+        <div class="hero-actions">
+          <button class="btn btn-green" type="submit">Bazaga saqlash</button>
+          <button class="btn btn-outline" type="button" id="geoBtn">📍 Mening joyim</button>
+        </div>
+      </form>
+    </div>
+    <div class="panel">
+      <div class="panel-h"><span>Xaritadan nuqta tanlang</span></div>
+      <div id="addMap" style="height:520px"></div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  const map = L.map("addMap").setView([{{ school.lat }}, {{ school.lng }}], 17);
+  addBaseLayers(map, false);
+  let marker = L.marker([{{ school.lat }}, {{ school.lng }}], { draggable: true }).addTo(map);
+  function setLL(lat, lng) {
+    document.getElementById("lat").value = lat.toFixed(6);
+    document.getElementById("lng").value = lng.toFixed(6);
+    marker.setLatLng([lat, lng]);
+  }
+  map.on("click", e => setLL(e.latlng.lat, e.latlng.lng));
+  marker.on("dragend", () => {
+    const p = marker.getLatLng();
+    setLL(p.lat, p.lng);
+  });
+  document.getElementById("geoBtn").onclick = () => {
+    if (!navigator.geolocation) return alert("Geolokatsiya mavjud emas.");
+    navigator.geolocation.getCurrentPosition(pos => {
+      setLL(pos.coords.latitude, pos.coords.longitude);
+      map.setView([pos.coords.latitude, pos.coords.longitude], 17);
+    }, () => alert("Joylashuv ruxsat etilmadi. Xaritadan nuqta tanlang."));
+  };
+</script>
+{% endblock %}

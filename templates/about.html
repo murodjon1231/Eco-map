@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Loyiha haqida{% endblock %}
+{% block content %}
+<section class="page">
+  <div class="wrap">
+    <h1>«Eco-Map» — interaktiv ekologik xarita</h1>
+    <p class="lead">«Ixtirochilikka qadam» respublika ko‘rik-tanlovi. Yo‘nalish: axborot texnologiyalari va ekologiya. Tayyorladi: 237-maktab o‘quvchilari jamoasi. Toshkent — 2026.</p>
+    <div class="about-grid">
+      <article class="about-card">
+        <h3>Maqsad</h3>
+        <p>Maktab va mahalla hududidagi yashil maydonlarning interaktiv xaritasini va har bir daraxtning raqamli pasportini yaratish. QR-kod orqali jamoatchilik nazorati.</p>
+      </article>
+      <article class="about-card">
+        <h3>Hozirgi ko‘rsatkichlar</h3>
+        <p>Jami daraxtlar: <b>{{ stats.total }}</b><br>Yashil hududlar: <b>{{ stats.zones }}</b><br>Sog‘lom: <b>{{ stats.healthy }}</b><br>Parvarish kerak: <b>{{ stats.care }}</b><br>Yillik kislorod: ~<b>{{ stats.oxygen }} kg</b></p>
+      </article>
+      <article class="about-card">
+        <h3>Qanday ishlaydi</h3>
+        <ol>
+          <li>QR-kodni skanerlash — daraxt pasporti ochiladi.</li>
+          <li>Xaritada yashil / sariq / qizil markerlar orqali holatni ko‘rish.</li>
+          <li>Eco-Signal orqali tezkor xabar yuborish.</li>
+          <li>Eko-patrul admin panelida holatni yangilash.</li>
+        </ol>
+      </article>
+      <article class="about-card">
+        <h3>Texnologiya</h3>
+        <p>HTML5, CSS3, JavaScript, Leaflet.js (OpenStreetMap), Python Flask va SQLite. QR-kodlar Python qrcode kutubxonasi bilan yaratiladi.</p>
+      </article>
+      <article class="about-card">
+        <h3>Muammo</h3>
+        <p>Yashil maydonlarning yagona raqamli reyestri yo‘qligi sababli ko‘chatlarning bir qismi suvsizlikdan qurib qoladi. Jamoatchilik tezkor geolokatsiya bilan xabar bera olmaydi.</p>
+      </article>
+      <article class="about-card">
+        <h3>Kutilayotgan natija</h3>
+        <ul>
+          <li>Ko‘chatlarning tutib ketishi 85–90% gacha oshadi.</li>
+          <li>Noqonuniy kesilishning oldi olinadi.</li>
+          <li>O‘quvchilar IT ko‘nikmalarini real muammoga qo‘llaydi.</li>
+        </ul>
+      </article>
+    </div>
+    <div class="hero-actions" style="margin-top:20px">
+      <a class="btn btn-green" href="{{ url_for('xarita') }}">Xaritani ochish</a>
+      <a class="btn btn-outline" href="{{ url_for('kirish') }}">Eko-patrul paneli</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

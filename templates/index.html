@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Bosh sahifa{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <h1>Tabiatni raqamli<br>xaritada asraymiz</h1>
+      <p>Maktab va mahalladagi daraxtlar, yashil hududlar va ekologik holatni kuzatib boring.</p>
+      <div class="hero-actions">
+        <a class="btn btn-green" href="{{ url_for('xarita') }}">📍 Xaritani ko‘rish →</a>
+        <a class="btn btn-outline" href="{{ url_for('daraxt_qoshish') }}">＋ Daraxt qo‘shish</a>
+      </div>
+    </div>
+    <div class="hero-map">
+      <div class="zoom-stack">
+        <button type="button" id="heroZoomIn">+</button>
+        <button type="button" id="heroZoomOut">−</button>
+      </div>
+      <a class="map-float" href="{{ url_for('daraxt_pasport', tree_id=catalog[0].id if catalog[0] else 1) }}">
+        <span class="tree-mini">🌳</span>
+        <span>
+          <b>Chinor</b>
+          <small>Sog‘lom</small>
+        </span>
+        <span>›</span>
+      </a>
+      <div id="heroMap"></div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap stats">
+  <a class="stat" href="{{ url_for('daraxtlar') }}"><i>🌳</i><div><span>Jami daraxtlar</span><b>{{ '{:,}'.format(stats.total).replace(',', ' ') }}</b></div></a>
+  <a class="stat" href="{{ url_for('xarita') }}"><i>🍃</i><div><span>Yashil hududlar</span><b>{{ stats.zones }}</b></div></a>
+  <a class="stat" href="{{ url_for('daraxtlar', holat='Sog‘lom') }}"><i>✅</i><div><span>Sog‘lom daraxtlar</span><b>{{ '{:,}'.format(stats.healthy).replace(',', ' ') }}</b></div></a>
+  <a class="stat warn" href="{{ url_for('daraxtlar', holat='muammo') }}"><i>⚠️</i><div><span>Parvarish kerak</span><b>{{ stats.care }}</b></div></a>
+</div>
+
+<section class="section">
+  <div class="wrap two-col">
+    <div class="panel">
+      <div class="panel-h">
+        <span>📘 Hudud ekologik xaritasi</span>
+        <a href="{{ url_for('xarita') }}" title="Kattalashtirish">⛶</a>
+      </div>
+      <div class="map-box">
+        <div class="legend">
+          <div><span class="dot ok"></span> Sog‘lom</div>
+          <div><span class="dot warn"></span> Parvarish talab</div>
+          <div><span class="dot danger"></span> Xavfli</div>
+        </div>
+        <div id="homeMap" class="home-map"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-h">
+        <span>🔔 So‘nggi Eco-Signal xabarlari</span>
+        <a href="{{ url_for('eco_signal') }}">Barchasini ko‘rish →</a>
+      </div>
+      <div class="signals">
+        {% for r in reports %}
+        <a class="signal" href="{{ url_for('eco_signal') }}#r{{ r.id }}">
+          <div class="avatar"><div class="photo" data-photo="{{ ['chinor','archa','eman'][loop.index0 % 3] }}" style="width:48px;height:48px;border-radius:50%"></div></div>
+          <div>
+            <h4>{{ r.title }}</h4>
+            {% set st = 'yangi' if r.status == 'Yangi' else ('jarayonda' if r.status == 'Jarayonda' else 'korib') %}
+            <span class="chip {{ st }}">{{ r.status }}</span>
+          </div>
+          <time>{{ r.created_at[-2:] }}.{{ r.created_at[5:7] }}.{{ r.created_at[:4] }}</time>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="catalog-head">
+      <h2>🌳 Daraxtlar katalogi</h2>
+      <a class="link" href="{{ url_for('daraxtlar') }}">Barchasini ko‘rish →</a>
+    </div>
+    <div class="cards">
+      {% for t in catalog if t %}
+      <article class="card">
+        <div class="photo" data-photo="{{ t.photo_key }}"></div>
+        <div class="card-body">
+          <h3>{{ t.species_name }}</h3>
+          <div class="meta">
+            <span>🌿 {{ tree_age(t.planted_year) }} yil</span>
+            <span>📏 {{ t.height_m }} m</span>
+            <span>{{ '🟢' if t.health_status == 'Sog‘lom' else '🟡' }} {{ t.health_status }}</span>
+          </div>
+          <a class="link" href="{{ url_for('daraxt_pasport', tree_id=t.id) }}">Pasportni ko‘rish →</a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const sample = {{ map_sample | tojson }};
+  const heroMap = L.map("heroMap", { zoomControl: false, attributionControl: false }).setView([{{ school.lat }}, {{ school.lng }}], 17);
+  addBaseLayers(heroMap, true);
+  sample.slice(0, 18).forEach(t => {
+    const m = L.marker([t.latitude, t.longitude], { icon: treeIcon(t.health_status) }).addTo(heroMap);
+    bindTreePopup(m, t);
+  });
+  L.marker([{{ school.lat }}, {{ school.lng }}], { icon: schoolIcon() }).addTo(heroMap);
+  document.getElementById("heroZoomIn").onclick = () => heroMap.zoomIn();
+  document.getElementById("heroZoomOut").onclick = () => heroMap.zoomOut();
+
+  const homeMap = L.map("homeMap", { zoomControl: false }).setView([{{ school.lat }}, {{ school.lng }}], 15);
+  addBaseLayers(homeMap, false);
+  sample.forEach(t => {
+    const m = L.marker([t.latitude, t.longitude], { icon: treeIcon(t.health_status) }).addTo(homeMap);
+    bindTreePopup(m, t);
+  });
+  L.marker([{{ school.lat }}, {{ school.lng }}], { icon: schoolIcon() }).addTo(homeMap);
+</script>
+{% endblock %}

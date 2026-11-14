@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Eco-Map{% endblock %} | ECO-MAP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="header">
+    <div class="wrap header-inner">
+      <a class="logo" href="{{ url_for('index') }}">
+        <span class="logo-pin">📍</span> ECO-MAP
+      </a>
+      <nav class="nav" id="nav">
+        <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' else '' }}"><span class="nav-ico">🏠</span> Bosh sahifa</a>
+        <a href="{{ url_for('xarita') }}" class="{{ 'active' if request.endpoint == 'xarita' else '' }}"><span class="nav-ico">🗺️</span> Xarita</a>
+        <a href="{{ url_for('daraxtlar') }}" class="{{ 'active' if request.endpoint == 'daraxtlar' else '' }}"><span class="nav-ico">🌳</span> Daraxtlar</a>
+        <a href="{{ url_for('eco_signal') }}" class="{{ 'active' if request.endpoint in ['eco_signal','eco_signal_send'] else '' }}"><span class="nav-ico">🔔</span> Eco-Signal</a>
+        <a href="{{ url_for('loyiha') }}" class="{{ 'active' if request.endpoint == 'loyiha' else '' }}"><span class="nav-ico">ℹ️</span> Loyiha haqida</a>
+      </nav>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="menu-btn" id="menuBtn" type="button" aria-label="Menyu">☰</button>
+        {% if current_user %}
+          <a class="btn btn-green btn-login" href="{{ url_for('admin') }}">👤 {{ current_user.username }}</a>
+        {% else %}
+          <a class="btn btn-green btn-login" href="{{ url_for('kirish') }}">👤 Kirish</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+        <div class="flash {{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <div class="logo" style="color:#fff"><span class="logo-pin">🍃</span> ECO-MAP</div>
+      <div>Yashil kelajak uchun birgalikda!</div>
+      <div class="social">
+        <a href="https://t.me/share/url?url=http://127.0.0.1:5000&text=Eco-Map%20237-maktab" target="_blank" rel="noreferrer" title="Telegram">✈</a>
+        <a href="https://www.youtube.com/results?search_query=Yashil+makon" target="_blank" rel="noreferrer" title="YouTube">▶</a>
+        <a href="https://www.facebook.com/sharer/sharer.php?u=http://127.0.0.1:5000" target="_blank" rel="noreferrer" title="Facebook">f</a>
+      </div>
+      <div>© 2026 Eco-Map. Barcha huquqlar himoyalangan.</div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

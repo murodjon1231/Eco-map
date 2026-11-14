@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}{{ tree.species_name }} pasporti{% endblock %}
+{% block content %}
+<section class="page">
+  <div class="wrap">
+    <p class="lead" style="margin-bottom:8px"><a href="{{ url_for('daraxtlar') }}">← Katalog</a></p>
+    <h1>{{ tree.species_name }} · {{ tree.public_code }}</h1>
+    <p class="lead">Raqamli pasport: GPS, yosh, kislorod ishlab chiqarish va QR-kod.</p>
+    <div class="passport">
+      <div>
+        <div class="pass-photo">
+          <div class="photo" data-photo="{{ tree.photo_key }}"></div>
+          <div class="qr-box">
+            <img src="{{ url_for('tree_qr', tree_id=tree.id) }}" alt="QR kod">
+          </div>
+        </div>
+        <div class="kv">
+          <div><span>Yoshi</span><b>{{ age }} yil</b></div>
+          <div><span>Bo‘yi</span><b>{{ tree.height_m }} m</b></div>
+          <div><span>Tana diametri</span><b>{{ tree.trunk_diameter }} sm</b></div>
+          <div><span>Kislorod / yil</span><b>~{{ tree.oxygen_kg|int }} kg</b></div>
+          <div><span>Ekilgan yil</span><b>{{ tree.planted_year }}</b></div>
+          <div><span>Holati</span><b>{{ tree.health_status }}</b></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span>📍 Xaritada joylashuvi</span></div>
+        <div id="passMap" style="height:240px"></div>
+        <div class="card-body">
+          <p style="margin-bottom:10px;color:#466152">
+            Koordinata: {{ '%.6f'|format(tree.latitude) }}, {{ '%.6f'|format(tree.longitude) }}<br>
+            {% if zone %}Hudud: {{ zone.name }}{% endif %}<br>
+            Yangilangan: {{ tree.last_updated }}
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-green" href="{{ url_for('xarita', daraxt=tree.id) }}">Xaritada ko‘rish</a>
+            <a class="btn btn-outline" href="{{ url_for('eco_signal', tree_id=tree.id) }}">Eco-Signal yuborish</a>
+            <a class="btn btn-outline" href="{{ url_for('tree_qr', tree_id=tree.id, yuklab=1) }}">QR yuklab olish</a>
+            <button class="btn btn-outline" type="button" onclick="window.print()">Chop etish</button>
+          </div>
+          {% if current_user %}
+          <form class="form" method="post" action="{{ url_for('tree_status', tree_id=tree.id) }}" style="margin-top:16px">
+            <label>Holatni yangilash (admin)</label>
+            <select name="health_status">
+              <option {{ 'selected' if tree.health_status == 'Sog‘lom' }}>Sog‘lom</option>
+              <option {{ 'selected' if tree.health_status == 'Parvarish talab' }}>Parvarish talab</option>
+              <option {{ 'selected' if tree.health_status == 'Xavfli' }}>Xavfli</option>
+            </select>
+            <button class="btn btn-green" type="submit">Saqlash</button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% if reports %}
+    <div class="catalog-head"><h2>Shu daraxt bo‘yicha Eco-Signal</h2></div>
+    <div class="panel">
+      {% for r in reports %}
+      <a class="signal" href="{{ url_for('eco_signal') }}#r{{ r.id }}">
+        <div class="avatar">🔔</div>
+        <div>
+          <h4>{{ r.title }}</h4>
+          <span class="chip {{ 'yangi' if r.status == 'Yangi' else ('jarayonda' if r.status == 'Jarayonda' else 'korib') }}">{{ r.status }}</span>
+        </div>
+        <time>{{ r.created_at }}</time>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if nearby %}
+    <div class="catalog-head"><h2>Shu turdagi boshqa daraxtlar</h2></div>
+    <div class="cards">
+      {% for t in nearby %}
+      <article class="card">
+        <div class="photo" data-photo="{{ t.photo_key }}"></div>
+        <div class="card-body">
+          <h3>{{ t.species_name }}</h3>
+          <div class="meta"><span>{{ t.public_code }}</span></div>
+          <a class="link" href="{{ url_for('daraxt_pasport', tree_id=t.id) }}">Pasportni ko‘rish →</a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  const map = L.map("passMap", { zoomControl: false }).setView([{{ tree.latitude }}, {{ tree.longitude }}], 17);
+  addBaseLayers(map, true);
+  L.marker([{{ tree.latitude }}, {{ tree.longitude }}], { icon: treeIcon("{{ tree.health_status }}") }).addTo(map);
+</script>
+{% endblock %}
