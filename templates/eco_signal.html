@@ -60,7 +60,7 @@
               <span class="chip {{ 'yangi' if r.status == 'Yangi' else ('jarayonda' if r.status == 'Jarayonda' else 'korib') }}">{{ r.status }}</span>
               <div style="color:#7b8d81;font-size:12px;margin-top:6px">{{ r.reporter }} · {{ r.created_at }}</div>
               {% if r.photo_url %}
-              <a class="link" href="{{ url_for('static', filename=r.photo_url) }}" target="_blank">Rasmni ko‘rish</a>
+              <a class="link" href="{{ media_url(r.photo_url) }}" target="_blank">Rasmni ko‘rish</a>
               {% endif %}
               {% if r.tree_id %}
               <a class="link" href="{{ url_for('daraxt_pasport', tree_id=r.tree_id) }}">Daraxt pasporti</a>

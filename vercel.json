@@ -1,3 +1,10 @@
 {
-  "framework": "flask"
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "flask",
+  "functions": {
+    "app.py": {
+      "maxDuration": 30,
+      "includeFiles": "{templates/**,eco_map.db}"
+    }
+  }
 }

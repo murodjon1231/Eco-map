@@ -2,6 +2,7 @@ import csv
 import io
 import os
 import random
+import shutil
 import sqlite3
 from datetime import datetime
 from functools import wraps
@@ -17,6 +18,7 @@ from flask import (
     render_template,
     request,
     send_file,
+    send_from_directory,
     session,
     url_for,
 )
@@ -24,9 +26,15 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "eco_map.db")
-QR_DIR = os.path.join(BASE_DIR, "static", "qr")
-UPLOAD_DIR = os.path.join(BASE_DIR, "static", "uploads")
+IS_VERCEL = bool(os.environ.get("VERCEL"))
+RUNTIME_DIR = "/tmp/eco-map" if IS_VERCEL else BASE_DIR
+BUNDLED_DB = os.path.join(BASE_DIR, "eco_map.db")
+DB_PATH = os.path.join(RUNTIME_DIR, "eco_map.db")
+QR_DIR = os.path.join(RUNTIME_DIR, "qr" if IS_VERCEL else os.path.join("static", "qr"))
+UPLOAD_DIR = os.path.join(
+    RUNTIME_DIR, "uploads" if IS_VERCEL else os.path.join("static", "uploads")
+)
+STATIC_DIR = os.path.join(BASE_DIR, "public", "static")
 ALLOWED_PHOTOS = {".jpg", ".jpeg", ".png", ".webp"}
 PER_PAGE = 12
 
@@ -37,8 +45,13 @@ SCHOOL = {
     "lng": 69.26742,
 }
 
-app = Flask(__name__)
-app.secret_key = "eco-map-237-maktab-2026-yashil-makon"
+app = Flask(
+    __name__,
+    static_folder=STATIC_DIR,
+    static_url_path="/static",
+    template_folder=os.path.join(BASE_DIR, "templates"),
+)
+app.secret_key = os.environ.get("SECRET_KEY", "eco-map-237-maktab-2026-yashil-makon")
 
 SPECIES = [
     {"name": "Chinor", "oxygen": 118, "share": 0.28, "photo": "chinor"},
@@ -93,9 +106,15 @@ def safe_next(value, fallback):
     return fallback
 
 
-def init_db():
+def prepare_runtime():
     os.makedirs(QR_DIR, exist_ok=True)
     os.makedirs(UPLOAD_DIR, exist_ok=True)
+    if IS_VERCEL and os.path.exists(BUNDLED_DB) and not os.path.exists(DB_PATH):
+        shutil.copyfile(BUNDLED_DB, DB_PATH)
+
+
+def init_db():
+    prepare_runtime()
     db = sqlite3.connect(DB_PATH)
     db.executescript(
         """
@@ -347,6 +366,12 @@ def status_class(status):
     return mapping.get(status, "ok")
 
 
+def media_url(path):
+    if not path:
+        return ""
+    return url_for("uploaded_file", filename=os.path.basename(path))
+
+
 @app.context_processor
 def inject_globals():
     return {
@@ -354,7 +379,13 @@ def inject_globals():
         "school": SCHOOL,
         "now_year": 2026,
         "status_class": status_class,
+        "media_url": media_url,
     }
+
+
+@app.route("/media/<path:filename>")
+def uploaded_file(filename):
+    return send_from_directory(UPLOAD_DIR, os.path.basename(filename))
 
 
 def stats_dict():
