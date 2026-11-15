@@ -1,0 +1,13 @@
+[project]
+name = "eco-map"
+version = "1.0.0"
+requires-python = ">=3.12"
+dependencies = [
+    "flask==3.0.3",
+    "qrcode==7.4.2",
+    "pillow==10.4.0",
+    "werkzeug==3.0.4",
+]
+
+[tool.vercel]
+entrypoint = "app:app"
